@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAML Auth Demo – Servis Sağlayıcı</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8; color: #2d3748; min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      background: #1a202c; padding: .9rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    }
+    nav .brand { color: #fff; font-size: 1.1rem; font-weight: 700; letter-spacing: .5px; }
+    nav .badge {
+      background: #48bb78; color: #fff; font-size: .7rem;
+      padding: .2rem .5rem; border-radius: 4px; margin-left: .5rem; vertical-align: middle;
+    }
+    nav a { color: #a0aec0; text-decoration: none; font-size: .9rem; }
+    nav a:hover { color: #fff; }
+
+    /* ── Main ── */
+    main { flex: 1; display: flex; flex-direction: column; align-items: center;
+           justify-content: center; padding: 3rem 1.5rem; }
+
+    /* ── Hero ── */
+    .hero { text-align: center; max-width: 640px; }
+    .hero .icon {
+      width: 80px; height: 80px; background: #4299e1;
+      border-radius: 50%; display: inline-flex; align-items: center;
+      justify-content: center; margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(66,153,225,.4);
+    }
+    .hero .icon svg { width: 40px; height: 40px; fill: #fff; }
+    .hero h1 { font-size: 2rem; color: #1a202c; margin-bottom: .75rem; }
+    .hero p  { color: #718096; line-height: 1.7; margin-bottom: 2rem; }
+
+    /* Logged-in banner */
+    .welcome-box {
+      background: #c6f6d5; border: 1px solid #9ae6b4;
+      border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 2rem;
+      display: flex; align-items: center; gap: .75rem;
+    }
+    .welcome-box svg { width: 22px; height: 22px; fill: #276749; flex-shrink: 0; }
+    .welcome-box p { margin: 0; color: #22543d; font-weight: 500; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .75rem 2rem; border-radius: 6px;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+      border: none; text-decoration: none; transition: filter .15s;
+    }
+    .btn:hover { filter: brightness(.9); }
+    .btn-primary  { background: #4299e1; color: #fff; }
+    .btn-success  { background: #48bb78; color: #fff; }
+    .btn-danger   { background: #fc8181; color: #fff; }
+
+    /* ── Flow diagram ── */
+    .flow {
+      margin-top: 3rem; width: 100%; max-width: 700px;
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.08); padding: 2rem;
+    }
+    .flow h2 { font-size: 1.1rem; color: #2d3748; margin-bottom: 1.5rem; text-align: center; }
+    .steps { display: flex; align-items: center; justify-content: center; gap: .5rem; flex-wrap: wrap; }
+    .step {
+      text-align: center; padding: .75rem 1rem;
+      background: #ebf8ff; border-radius: 8px;
+      font-size: .8rem; color: #2b6cb0; font-weight: 600; min-width: 110px;
+    }
+    .step span { display: block; font-size: .7rem; color: #4a5568; font-weight: 400; margin-top: .25rem; }
+    .arrow { font-size: 1.5rem; color: #a0aec0; }
+
+    /* ── Info cards ── */
+    .cards { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 2rem; }
+    .card {
+      background: #fff; border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07); padding: 1.25rem 1.5rem;
+      min-width: 200px; flex: 1; max-width: 280px;
+    }
+    .card .card-label { font-size: .7rem; text-transform: uppercase;
+                        letter-spacing: 1px; color: #a0aec0; }
+    .card .card-value { font-size: .95rem; font-weight: 600; color: #2d3748; margin-top: .25rem; }
+    .card .dot { display: inline-block; width: 8px; height: 8px;
+                 border-radius: 50%; margin-right: .4rem; }
+    .dot-green  { background: #48bb78; }
+    .dot-blue   { background: #4299e1; }
+
+    footer { text-align: center; padding: 1.5rem; color: #a0aec0; font-size: .8rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">
+    🔐 SAML Auth Demo
+    <span class="badge">SP</span>
+  </span>
+  <% if (user) { %>
+    <a href="/logout">Çıkış Yap</a>
+  <% } %>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="icon">
+      <!-- shield icon -->
+      <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.25 3.75 10.15 9 11.25C17.25 21.15 21 16.25 21 11V5L12 1z"/></svg>
+    </div>
+
+    <h1>SAML 2.0 Kimlik Doğrulama</h1>
+    <p>
+      Bu demo, bir <strong>Servis Sağlayıcı (SP)</strong> ile yerel bir
+      <strong>Mock Kimlik Sağlayıcı (IdP)</strong> arasındaki SAML 2.0
+      SP-initiated SSO akışını göstermektedir.
+    </p>
+
+    <% if (user) { %>
+      <div class="welcome-box">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+        <p>Hoş geldiniz, <strong><%= user.name %></strong>! Kimliğiniz başarıyla doğrulandı.</p>
+      </div>
+      <a href="/profile" class="btn btn-success">
+        <svg style="width:18px;height:18px;fill:currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+        Profilimi Görüntüle
+      </a>
+    <% } else { %>
+      <a href="/login" class="btn btn-primary">
+        <svg style="width:18px;height:18px;fill:currentColor" viewBox="0 0 24 24"><path d="M10 17v-3H3v-4h7V7l5 5-5 5zm9 2H12v-2h7V5h-7V3h7c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2z"/></svg>
+        SAML ile Giriş Yap
+      </a>
+    <% } %>
+  </div>
+
+  <!-- SAML Flow Diagram -->
+  <div class="flow">
+    <h2>🔄 SAML 2.0 SP-Initiated SSO Akışı</h2>
+    <div class="steps">
+      <div class="step">
+        Kullanıcı
+        <span>Tarayıcı</span>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        SP (localhost:3000)
+        <span>AuthnRequest oluşturur</span>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        IdP (localhost:4000)
+        <span>Kullanıcıyı doğrular</span>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        SP ACS
+        <span>SAMLResponse doğrular</span>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        Oturum Açık
+        <span>Profil sayfası</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Cards -->
+  <div class="cards">
+    <div class="card">
+      <div class="card-label">Servis Sağlayıcı (SP)</div>
+      <div class="card-value"><span class="dot dot-green"></span>localhost:3000</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Mock Kimlik Sağlayıcı (IdP)</div>
+      <div class="card-value"><span class="dot dot-blue"></span>localhost:4000</div>
+    </div>
+    <div class="card">
+      <div class="card-label">İmzalama Algoritması</div>
+      <div class="card-value">RSA-SHA256</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Bağlama (Binding)</div>
+      <div class="card-value">HTTP-Redirect / POST</div>
+    </div>
+  </div>
+</main>
+
+<footer>SAML 2.0 Authentication Demo — Yalnızca geliştirme/eğitim amaçlıdır.</footer>
+
+</body>
+</html>

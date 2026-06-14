@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil – SAML Auth Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f4f8; color: #2d3748; min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    nav {
+      background: #1a202c; padding: .9rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    }
+    nav .brand { color: #fff; font-size: 1.1rem; font-weight: 700; }
+    nav .badge {
+      background: #48bb78; color: #fff; font-size: .7rem;
+      padding: .2rem .5rem; border-radius: 4px; margin-left: .5rem; vertical-align: middle;
+    }
+    nav .nav-links a {
+      color: #a0aec0; text-decoration: none; font-size: .9rem; margin-left: 1.5rem;
+    }
+    nav .nav-links a:hover { color: #fff; }
+
+    main {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; padding: 3rem 1.5rem;
+    }
+
+    .profile-card {
+      background: #fff; border-radius: 14px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.1);
+      width: 100%; max-width: 620px; overflow: hidden;
+    }
+
+    .profile-header {
+      background: linear-gradient(135deg, #4299e1, #667eea);
+      padding: 2.5rem 2rem; text-align: center; color: #fff;
+    }
+    .avatar {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: rgba(255,255,255,.25); display: inline-flex;
+      align-items: center; justify-content: center; margin-bottom: 1rem;
+      font-size: 2.2rem; border: 3px solid rgba(255,255,255,.6);
+    }
+    .profile-header h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+    .profile-header .email-tag {
+      display: inline-block; background: rgba(255,255,255,.2);
+      padding: .25rem .75rem; border-radius: 20px; font-size: .85rem; margin-top: .5rem;
+    }
+
+    /* Role badge */
+    .role-badge {
+      display: inline-block; margin-top: .75rem;
+      padding: .25rem .9rem; border-radius: 20px; font-size: .8rem; font-weight: 600;
+    }
+    .role-admin { background: #f6ad55; color: #7b341e; }
+    .role-user  { background: #68d391; color: #22543d; }
+
+    .profile-body { padding: 2rem; }
+
+    .section-title {
+      font-size: .75rem; text-transform: uppercase; letter-spacing: 1px;
+      color: #a0aec0; font-weight: 600; margin-bottom: 1rem;
+    }
+
+    .attr-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .75rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 480px) { .attr-grid { grid-template-columns: 1fr; } }
+
+    .attr-item {
+      background: #f7fafc; border-radius: 8px;
+      padding: .85rem 1rem; border-left: 3px solid #4299e1;
+    }
+    .attr-item .attr-name  { font-size: .72rem; color: #718096; text-transform: uppercase; letter-spacing: .5px; }
+    .attr-item .attr-value { font-size: .95rem; font-weight: 600; color: #2d3748; margin-top: .2rem; word-break: break-all; }
+
+    /* SAML Assertion details box */
+    .saml-info {
+      background: #ebf8ff; border: 1px solid #bee3f8;
+      border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 2rem;
+    }
+    .saml-info p { font-size: .82rem; color: #2b6cb0; line-height: 1.7; }
+    .saml-info strong { color: #1a365d; }
+
+    .actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .65rem 1.5rem; border-radius: 6px;
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      border: none; text-decoration: none; transition: filter .15s;
+    }
+    .btn:hover { filter: brightness(.9); }
+    .btn-primary { background: #4299e1; color: #fff; }
+    .btn-danger  { background: #e53e3e; color: #fff; }
+    .btn-outline { background: #fff; color: #4a5568; border: 1px solid #e2e8f0; }
+
+    .success-banner {
+      background: #c6f6d5; border: 1px solid #9ae6b4;
+      border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: .6rem;
+      font-size: .88rem; color: #22543d; font-weight: 500;
+    }
+
+    footer { text-align: center; padding: 1.5rem; color: #a0aec0; font-size: .8rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">
+    🔐 SAML Auth Demo
+    <span class="badge">SP</span>
+  </span>
+  <div class="nav-links">
+    <a href="/">Ana Sayfa</a>
+    <a href="/logout">Çıkış Yap</a>
+  </div>
+</nav>
+
+<main>
+  <div class="profile-card">
+
+    <div class="profile-header">
+      <div class="avatar">👤</div>
+      <h1><%= user.name %></h1>
+      <div class="email-tag">✉ <%= user.email %></div>
+      <br>
+      <span class="role-badge role-<%= user.role %>">
+        <%= user.role === 'admin' ? '⚙ Admin' : '👤 Kullanıcı' %>
+      </span>
+    </div>
+
+    <div class="profile-body">
+
+      <div class="success-banner">
+        ✅ SAML 2.0 kimlik doğrulaması başarıyla tamamlandı.
+        IdP tarafından imzalanan assertion SP tarafından doğrulandı.
+      </div>
+
+      <div class="section-title">IdP'den Gelen Kullanıcı Nitelikleri (SAML Attributes)</div>
+
+      <div class="attr-grid">
+        <div class="attr-item">
+          <div class="attr-name">NameID</div>
+          <div class="attr-value"><%= user.nameID %></div>
+        </div>
+        <div class="attr-item">
+          <div class="attr-name">E-posta</div>
+          <div class="attr-value"><%= user.email %></div>
+        </div>
+        <div class="attr-item">
+          <div class="attr-name">Ad Soyad</div>
+          <div class="attr-value"><%= user.name %></div>
+        </div>
+        <div class="attr-item">
+          <div class="attr-name">Rol</div>
+          <div class="attr-value"><%= user.role %></div>
+        </div>
+        <div class="attr-item">
+          <div class="attr-name">Departman</div>
+          <div class="attr-value"><%= user.department %></div>
+        </div>
+      </div>
+
+      <div class="section-title">Teknik Bilgiler</div>
+      <div class="saml-info">
+        <p>
+          <strong>AuthnRequest:</strong> HTTP-Redirect binding ile IdP'ye gönderildi (DEFLATE + Base64).<br>
+          <strong>SAMLResponse:</strong> HTTP-POST binding ile SP ACS'ye gönderildi (Base64).<br>
+          <strong>İmzalama:</strong> Assertion, IdP'nin RSA-SHA256 özel anahtarıyla imzalandı.<br>
+          <strong>Doğrulama:</strong> SP, IdP'nin public sertifikasıyla imzayı doğruladı.<br>
+          <strong>SP Entity ID:</strong> http://localhost:3000<br>
+          <strong>IdP Entity ID:</strong> http://localhost:4000
+        </p>
+      </div>
+
+      <div class="actions">
+        <a href="/" class="btn btn-outline">← Ana Sayfa</a>
+        <a href="/saml/metadata" class="btn btn-primary" target="_blank">SP Metadata</a>
+        <a href="/saml-viewer" class="btn btn-outline" target="_blank">🔍 SAML XML İncele</a>
+        <a href="/logout" class="btn btn-danger">Çıkış Yap</a>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer>SAML 2.0 Authentication Demo — Yalnızca geliştirme/eğitim amaçlıdır.</footer>
+
+</body>
+</html>

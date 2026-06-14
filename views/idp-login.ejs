@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IdP Giriş – SAML Auth Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 2rem;
+    }
+
+    .idp-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(255,255,255,.1); color: #a0aec0;
+      padding: .4rem 1rem; border-radius: 20px;
+      font-size: .8rem; margin-bottom: 1.5rem;
+      border: 1px solid rgba(255,255,255,.15);
+    }
+    .idp-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #48bb78; }
+
+    .login-card {
+      background: #fff; border-radius: 14px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+      width: 100%; max-width: 420px; overflow: hidden;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #553c9a, #e53e3e);
+      padding: 2rem; text-align: center; color: #fff;
+    }
+    .card-header .icon {
+      width: 60px; height: 60px; background: rgba(255,255,255,.2);
+      border-radius: 50%; display: inline-flex; align-items: center;
+      justify-content: center; margin-bottom: 1rem; font-size: 1.8rem;
+    }
+    .card-header h1 { font-size: 1.4rem; margin-bottom: .25rem; }
+    .card-header p  { font-size: .85rem; opacity: .85; }
+
+    .card-body { padding: 2rem; }
+
+    /* Error message */
+    .error-box {
+      background: #fff5f5; border: 1px solid #fed7d7;
+      border-radius: 6px; padding: .75rem 1rem;
+      color: #c53030; font-size: .88rem;
+      display: flex; align-items: center; gap: .5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block; font-size: .85rem; font-weight: 600;
+      color: #4a5568; margin-bottom: .4rem;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%; padding: .7rem 1rem;
+      border: 1.5px solid #e2e8f0; border-radius: 6px;
+      font-size: .95rem; color: #2d3748;
+      transition: border-color .15s;
+      margin-bottom: 1.1rem;
+      outline: none;
+    }
+    input:focus { border-color: #667eea; }
+
+    .btn-login {
+      width: 100%; padding: .85rem;
+      background: linear-gradient(135deg, #553c9a, #e53e3e);
+      color: #fff; border: none; border-radius: 6px;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: opacity .15s; letter-spacing: .3px;
+    }
+    .btn-login:hover { opacity: .88; }
+
+    /* Demo credentials hint */
+    .creds-box {
+      margin-top: 1.5rem; background: #f7fafc;
+      border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;
+    }
+    .creds-box .creds-title {
+      font-size: .75rem; text-transform: uppercase; letter-spacing: .8px;
+      color: #a0aec0; font-weight: 600; margin-bottom: .75rem;
+    }
+    .creds-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .5rem .75rem; background: #fff; border-radius: 6px;
+      margin-bottom: .5rem; border: 1px solid #e2e8f0; cursor: pointer;
+      transition: background .1s;
+    }
+    .creds-row:hover { background: #ebf8ff; }
+    .creds-row:last-child { margin-bottom: 0; }
+    .creds-info { font-size: .82rem; }
+    .creds-info strong { display: block; color: #2d3748; }
+    .creds-info span   { color: #718096; }
+    .creds-role {
+      font-size: .72rem; font-weight: 600; padding: .15rem .5rem;
+      border-radius: 12px;
+    }
+    .creds-role.admin { background: #fef3c7; color: #92400e; }
+    .creds-role.user  { background: #d1fae5; color: #065f46; }
+
+    .saml-note {
+      margin-top: 1.5rem; padding-top: 1rem;
+      border-top: 1px solid #e2e8f0;
+      font-size: .78rem; color: #a0aec0; text-align: center;
+    }
+
+    /* Hidden form fields */
+    input[type="hidden"] { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="idp-badge">
+  <div class="dot"></div>
+  Mock Identity Provider (IdP) — localhost:4000
+</div>
+
+<div class="login-card">
+
+  <div class="card-header">
+    <div class="icon">🏛</div>
+    <h1>Kimlik Doğrulama</h1>
+    <p>SAML 2.0 Identity Provider</p>
+  </div>
+
+  <div class="card-body">
+
+    <% if (error) { %>
+      <div class="error-box">
+        ⚠️ <%= error %>
+      </div>
+    <% } %>
+
+    <form method="POST" action="/saml/sso" autocomplete="off">
+      <!-- Hidden SAML context fields -->
+      <input type="hidden" name="requestId"   value="<%= requestId %>">
+      <input type="hidden" name="relayState"  value="<%= relayState %>">
+      <input type="hidden" name="acsUrl"      value="<%= acsUrl %>">
+
+      <label for="email">E-posta Adresi</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        placeholder="kullanici@demo.com"
+        required
+        autocomplete="username"
+      >
+
+      <label for="password">Şifre</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        placeholder="••••••••"
+        required
+        autocomplete="current-password"
+      >
+
+      <button type="submit" class="btn-login">Giriş Yap & SAML Doğrula</button>
+    </form>
+
+    <!-- Demo credentials hint (click to auto-fill) -->
+    <div class="creds-box">
+      <div class="creds-title">Demo Hesaplar (Tıkla → Otomatik Doldur)</div>
+
+      <div class="creds-row" onclick="fillCredentials('admin@demo.com','admin123')">
+        <div class="creds-info">
+          <strong>admin@demo.com</strong>
+          <span>Şifre: admin123</span>
+        </div>
+        <span class="creds-role admin">Admin</span>
+      </div>
+
+      <div class="creds-row" onclick="fillCredentials('user@demo.com','user123')">
+        <div class="creds-info">
+          <strong>user@demo.com</strong>
+          <span>Şifre: user123</span>
+        </div>
+        <span class="creds-role user">Kullanıcı</span>
+      </div>
+    </div>
+
+    <p class="saml-note">
+      Bu sayfa <strong>localhost:4000</strong> üzerinde çalışan Mock IdP tarafından sunulmaktadır.
+      Başarılı girişten sonra imzalı bir SAMLResponse oluşturularak
+      <strong>localhost:3000/auth/saml/callback</strong> adresine POST edilir.
+    </p>
+
+  </div>
+</div>
+
+<script>
+  function fillCredentials(email, password) {
+    document.getElementById('email').value    = email;
+    document.getElementById('password').value = password;
+    document.getElementById('email').focus();
+  }
+</script>
+
+</body>
+</html>

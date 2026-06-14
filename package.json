@@ -1,0 +1,22 @@
+{
+  "name": "saml-authentication-demo",
+  "version": "2.0.0",
+  "description": "SAML 2.0 Authentication Demo — Service Provider (@node-saml/passport-saml) + Identity Provider (samlify)",
+  "main": "start.js",
+  "scripts": {
+    "setup": "node scripts/generate-certs.js",
+    "start": "node start.js",
+    "dev": "node scripts/generate-certs.js && node start.js"
+  },
+  "dependencies": {
+    "@node-saml/passport-saml": "^5.1.0",
+    "body-parser": "^1.20.2",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "node-forge": "^1.3.1",
+    "passport": "^0.7.0",
+    "samlify": "^2.13.1",
+    "uuid": "^9.0.1"
+  }
+}

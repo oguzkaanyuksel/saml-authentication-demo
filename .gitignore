@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Certificates — private keys must NEVER be committed
+certs/*.pem
+certs/*.txt
+certs/*.key
+
+# SAML debug logs (may contain user data)
+saml-logs/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

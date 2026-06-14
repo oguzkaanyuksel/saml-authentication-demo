@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ID="_c3c81544598d4571b6034f2929e032d6" InResponseTo="_testid001" IssueInstant="2026-05-07T21:52:43.088Z" Version="2.0" Destination="http://localhost:3000/auth/saml/callback">
+  <saml:Issuer>http://localhost:4000</saml:Issuer>
+  <samlp:Status>
+    <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+  </samlp:Status>
+  <saml:Assertion ID="_67f4ff2dafcd4487ab71a5a3154711fe" IssueInstant="2026-05-07T21:52:43.088Z" Version="2.0">
+    <saml:Issuer>http://localhost:4000</saml:Issuer><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/><SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><Reference URI="#_67f4ff2dafcd4487ab71a5a3154711fe"><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><DigestValue>d0BBwdDcDjywEPMtbwKwV0+JLjubpmlCQ5iAakbYybI=</DigestValue></Reference></SignedInfo><SignatureValue>Q8fl9oTtuu4tJPvDrjQyqzkRLaIZbEcjMrRBwuD0mne7D/Ss3wyJZxhVzR2QJgwMdXgEJeKS3w9KG+yueO69W78moT8EmzGcQfJo0i2AmUxjtIds5JA2WeiaW+w+bc3K0f6K/cV4vIQ5o+vySZAV77+ZVljvrAXjk83VepKFxbuT6CYF/Z3ye3gY8VssGtNBd0bjlfqA03QAsPzmRSecndLS/q7MPxgFLlKpGP9l8PiWko1/mInYUaUoX6WzM+k9h8J2opgVp8F7IZzoXBpiNgrIvZsuk6R1FKT54e34iXs8Ky59Q+LWoFT5FaSdNYWZIufL3gVEXkzvMLq9l8xwaw==</SignatureValue><KeyInfo><X509Data><X509Certificate>MIIDLzCCAhegAwIBAgIGAZ4EWLNxMA0GCSqGSIb3DQEBCwUAMDsxGDAWBgNVBAMTD0lkUCAtIGxvY2FsaG9zdDESMBAGA1UEChMJU0FNTCBEZW1vMQswCQYDVQQGEwJUUjAeFw0yNjA1MDcyMTI5NDJaFw0zNjA1MDcyMTI5NDJaMDsxGDAWBgNVBAMTD0lkUCAtIGxvY2FsaG9zdDESMBAGA1UEChMJU0FNTCBEZW1vMQswCQYDVQQGEwJUUjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAO/OCWEsK8bOHGCfcJyYePXgf7K+sQIm534hh4kLGw7eW/3gKV3rfZ7Jk/PPcjZw480dW+B0gZZtBVIPu0Tt0GlPd03WQqXfj0KPUq8HeANB+IIIYaVSor1xW4K0pb90ai3C6OMljOq//wZrjj842iBhMgeeEJcYQhIe4LH0b/ozSsadVT0zHbAHnalyE6hvhGkYnbSFmttb2wo0Qe72OOluAmtuWjz2oZzXUzCZkbKIMe+SVoeCS4o0R9urNbRUn4FWhsXMmfkFR7NmMmNc86RzlKFHLh0HWt8AkZN2Z2L4dzLmzAYM5Da5yLDsMO+ASeRyM55cLtE+RdpTthQ5OPUCAwEAAaM5MDcwCQYDVR0TBAIwADALBgNVHQ8EBAMCBeAwHQYDVR0OBBYEFEFpCiA2cLfgctLOyw2FTuHu8/4PMA0GCSqGSIb3DQEBCwUAA4IBAQBmCjXGIQPoRkDpBL1edWescHEoINiI7xaKiT7L7KShcaFGqXSgKtUKJX7eu4Y3beKWuNOY3IcRBGElMYZGAsCMHh6EXu2tzE3k77a4wOdcTKJtd1ZsKLw1SOvPTZ0GO2FRwlR3oE3a5SiAGd8nhe5/K39pFw98Mxbdqu420a2ltzkk1LLrJSy4v6GHC2Y06+GIfC1oUoSf9R1gvu0xl/t5SbKtJkfpMH57iHwyaEQ+h0CT2+snGhUoUjRa9alsIOnRYrVqA14jOUlOwlDC5xt0FcCey/g18A2nZ/daWlmAd99dEGoYl93sLfwwNDtqfoOEYth2fyJJTlddGmFx4xiS</X509Certificate></X509Data></KeyInfo></Signature>
+    <saml:Subject>
+      <saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">admin@demo.com</saml:NameID>
+      <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+        <saml:SubjectConfirmationData InResponseTo="_testid001" NotOnOrAfter="2026-05-07T22:52:43.088Z" Recipient="http://localhost:3000/auth/saml/callback"/>
+      </saml:SubjectConfirmation>
+    </saml:Subject>
+    <saml:Conditions NotBefore="2026-05-07T21:47:43.088Z" NotOnOrAfter="2026-05-07T22:52:43.088Z">
+      <saml:AudienceRestriction>
+        <saml:Audience>http://localhost:3000</saml:Audience>
+      </saml:AudienceRestriction>
+    </saml:Conditions>
+    <saml:AuthnStatement AuthnInstant="2026-05-07T21:52:43.088Z" SessionIndex="_39c6e8cda3ce4174b037308a3e6601bc" SessionNotOnOrAfter="2026-05-08T05:52:43.088Z">
+      <saml:AuthnContext>
+        <saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport</saml:AuthnContextClassRef>
+      </saml:AuthnContext>
+    </saml:AuthnStatement>
+    <saml:AttributeStatement>
+      <saml:Attribute Name="role" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+        <saml:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">admin</saml:AttributeValue>
+      </saml:Attribute>
+    </saml:AttributeStatement>
+  </saml:Assertion>
+</samlp:Response>

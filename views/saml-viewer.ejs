@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAML XML İnceleyici</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f1117; color: #e2e8f0; min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    nav {
+      background: #1a202c; padding: .9rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #2d3748;
+    }
+    nav .brand { color: #fff; font-size: 1.05rem; font-weight: 700; }
+    nav .badge {
+      background: #4299e1; color: #fff; font-size: .7rem;
+      padding: .2rem .55rem; border-radius: 4px; margin-left: .5rem;
+    }
+    nav a { color: #a0aec0; text-decoration: none; font-size: .9rem; }
+    nav a:hover { color: #fff; }
+
+    .layout {
+      display: flex; flex: 1; overflow: hidden; height: calc(100vh - 55px);
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 280px; background: #1a202c; border-right: 1px solid #2d3748;
+      display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
+    }
+    .sidebar-header {
+      padding: 1rem 1.2rem; font-size: .75rem; text-transform: uppercase;
+      letter-spacing: 1px; color: #718096; border-bottom: 1px solid #2d3748;
+      font-weight: 600;
+    }
+    .file-list { overflow-y: auto; flex: 1; }
+    .file-item {
+      display: block; padding: .65rem 1.2rem; font-size: .8rem;
+      color: #a0aec0; text-decoration: none; border-bottom: 1px solid #1e2533;
+      word-break: break-all; line-height: 1.4; transition: background .1s;
+    }
+    .file-item:hover { background: #2d3748; color: #fff; }
+    .file-item.active { background: #2b4a7e; color: #90cdf4; font-weight: 600; }
+    .file-item .tag {
+      display: inline-block; font-size: .65rem; padding: .1rem .35rem;
+      border-radius: 3px; margin-bottom: .2rem; font-weight: 600;
+    }
+    .tag-response { background: #276749; color: #9ae6b4; }
+    .tag-received { background: #553c1e; color: #f6ad55; }
+    .file-item .fname { display: block; font-family: monospace; font-size: .75rem; }
+    .no-files {
+      padding: 1.5rem 1.2rem; font-size: .85rem; color: #718096; text-align: center;
+    }
+
+    /* ── Main panel ── */
+    .main {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .main-header {
+      padding: .9rem 1.5rem; background: #1a202c;
+      border-bottom: 1px solid #2d3748;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .main-header .file-name {
+      font-family: monospace; font-size: .85rem; color: #90cdf4;
+    }
+    .main-header .actions { display: flex; gap: .75rem; }
+    .btn-sm {
+      background: #2d3748; color: #e2e8f0; border: 1px solid #4a5568;
+      padding: .35rem .9rem; border-radius: 5px; font-size: .8rem;
+      cursor: pointer; transition: background .15s;
+    }
+    .btn-sm:hover { background: #4a5568; }
+
+    .xml-wrapper { flex: 1; overflow: auto; padding: 1.25rem 1.5rem; }
+    .xml-pre {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: .82rem; line-height: 1.6; white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* XML Syntax Highlighting */
+    .xt  { color: #e2e8f0; }   /* text content */
+    .xtg { color: #718096; }   /* <?xml ...?> */
+    .xtn { color: #f6ad55; }   /* tag names  */
+    .xta { color: #68d391; }   /* attribute names */
+    .xtv { color: #fc8181; }   /* attribute values */
+    .xte { color: #4a5568; }   /* punctuation */
+    .xts { color: #9f7aea; }   /* ds:Signature block tags */
+    .xtc { color: #e2e8f0; }   /* text nodes */
+
+    /* Empty state */
+    .empty-state {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: #4a5568; text-align: center; padding: 2rem;
+    }
+    .empty-icon {
+      font-size: 4rem; margin-bottom: 1rem; opacity: .4;
+    }
+    .empty-state h2 { font-size: 1.2rem; color: #718096; margin-bottom: .5rem; }
+    .empty-state p  { font-size: .9rem; }
+
+    /* copy toast */
+    #toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      background: #276749; color: #9ae6b4; padding: .6rem 1.2rem;
+      border-radius: 6px; font-size: .85rem; opacity: 0;
+      transition: opacity .3s; pointer-events: none;
+    }
+    #toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <span class="brand">SAML Auth Demo <span class="badge">XML</span></span>
+    <a href="http://localhost:3000">← SP Ana Sayfa</a>
+  </nav>
+
+  <div class="layout">
+    <!-- Sidebar: file list -->
+    <aside class="sidebar">
+      <div class="sidebar-header">SAML Kayıtları (<%= files.length %>)</div>
+      <div class="file-list">
+        <% if (files.length === 0) { %>
+          <div class="no-files">
+            Henüz kayıt yok.<br><small>Oturum açınca burada görünecek.</small>
+          </div>
+        <% } else { %>
+          <% files.forEach(function(f) { %>
+            <%
+              const isActive  = f === selectedFile;
+              const isResp    = f.startsWith('saml-response');
+              const tagClass  = isResp ? 'tag-response' : 'tag-received';
+              const tagLabel  = isResp ? 'IdP → SP' : 'SP aldı';
+            %>
+            <a href="/saml-viewer?file=<%= encodeURIComponent(f) %>"
+               class="file-item<%= isActive ? ' active' : '' %>">
+              <span class="tag <%= tagClass %>"><%= tagLabel %></span>
+              <span class="fname"><%= f %></span>
+            </a>
+          <% }); %>
+        <% } %>
+      </div>
+    </aside>
+
+    <!-- Main: XML viewer -->
+    <div class="main">
+      <% if (selectedFile && xmlContent) { %>
+        <div class="main-header">
+          <span class="file-name"><%= selectedFile %></span>
+          <div class="actions">
+            <button class="btn-sm" onclick="copyXml()">Kopyala</button>
+            <button class="btn-sm" onclick="downloadXml()">İndir</button>
+          </div>
+        </div>
+        <div class="xml-wrapper">
+          <pre class="xml-pre" id="xmlBlock"><%- highlightXml(xmlContent) %></pre>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <div class="empty-icon">📄</div>
+          <h2>Sol taraftan bir dosya seçin</h2>
+          <p>Oturum açtıktan sonra SAML XML'leri burada listelenecek.</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div id="toast">Kopyalandı!</div>
+
+  <% if (xmlContent) { %>
+  <script>
+    const rawXml = <%- JSON.stringify(xmlContent) %>;
+
+    function copyXml() {
+      navigator.clipboard.writeText(rawXml).then(() => showToast());
+    }
+
+    function downloadXml() {
+      const blob = new Blob([rawXml], { type: 'application/xml' });
+      const a    = document.createElement('a');
+      a.href     = URL.createObjectURL(blob);
+      a.download = '<%- selectedFile %>';
+      a.click();
+    }
+
+    function showToast() {
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+  </script>
+  <% } %>
+
+  <%
+  /**
+   * Minimal XML syntax highlighter — runs server-side in EJS.
+   * Escapes HTML then wraps known token types in <span> elements.
+   */
+  function highlightXml(xml) {
+    // 1. Escape HTML entities
+    let s = xml
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // 2. Restore < > for tagging (we'll re-escape later via colour spans)
+    // Instead, do one-pass token replacement on the escaped string.
+
+    // Processing instruction  <?xml ... ?>
+    s = s.replace(
+      /(&lt;\?)([\s\S]*?)(\?&gt;)/g,
+      '<span class="xtg">$1$2$3</span>'
+    );
+
+    // Closing tags  </foo:Bar>
+    s = s.replace(
+      /(&lt;\/)([\w:.-]+)(&gt;)/g,
+      '<span class="xte">$1</span><span class="xtn">$2</span><span class="xte">$3</span>'
+    );
+
+    // Self-closing and opening tags with attributes  <foo:Bar attr="val" ... />
+    s = s.replace(
+      /(&lt;)([\w:.-]+)((?:\s+[\w:.-]+="[^"]*")*\s*\/?&gt;)/g,
+      function(_, lt, tagName, rest) {
+        // Highlight attribute names and values inside `rest`
+        const isSig = /^ds:/.test(tagName);
+        const tnClass = isSig ? 'xts' : 'xtn';
+        const restHl = rest.replace(
+          /([\w:.-]+)(=)(")((?:[^"])*?)(")/g,
+          '<span class="xta">$1</span><span class="xte">$2</span>' +
+          '<span class="xte">$3</span><span class="xtv">$4</span><span class="xte">$5</span>'
+        );
+        return `<span class="xte">${lt}</span><span class="${tnClass}">${tagName}</span>${restHl}`;
+      }
+    );
+
+    return s;
+  }
+  %>
+</body>
+</html>
